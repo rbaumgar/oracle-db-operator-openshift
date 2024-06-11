@@ -1,4 +1,8 @@
-# getting-started-reactive-rest-oracle
+# getting-started-reactive-crud-oracle
+
+This project is based on the Quarkus Getting Started sample but it is using Oracle instead of PostgreSQL. See https://github.com/quarkusio/quarkus-quickstarts/tree/main/getting-started-reactive-crud.
+Some minor updates for `create table` and the SQL statements.
+
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
@@ -53,7 +57,7 @@ podman rmi quay.io/rbaumgar/oracle-crud-jvm
 podman run -i --rm -p 8080:8080 quarkus/getting-started-reactive-crud-jvm
 # run with a differnet db -e ...
 # also user= and password= is available
-podman run -i --rm -p 9090:8080 -e quarkus.datasource.reactive.url=vertx-reactive:oracle:thin:@localhost:42699/quarkus quarkus/getting-started-reactive-crud-jvm
+podman run -i --rm -p 8080:8080 -e quarkus.datasource.reactive.url=vertx-reactive:oracle:thin:@localhost:42699/quarkus quarkus/getting-started-reactive-crud-jvm
 ```
 
 ## Creating a native executable
