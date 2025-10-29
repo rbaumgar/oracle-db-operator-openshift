@@ -1,0 +1,1 @@
+subjectAltName=DNS:cdb-dev-ords,DNS:cdb-dev-ords.oracle,DNS:cdb-dev-ords-oracle.apps.ocp4.openshift.freeddns.org

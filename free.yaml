@@ -1,0 +1,62 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: freedb-admin-secret
+data:
+  oracle_pwd: V2VsY29tZTEK
+type: Opaque
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: freedb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  volumeMode: Filesystem
+---
+apiVersion: database.oracle.com/v1alpha1
+kind: SingleInstanceDatabase
+metadata:
+  name: freedb
+spec:
+  
+  ## Use only alphanumeric characters for sid
+  sid: FREE
+  
+  ## DB edition
+  edition: free
+  
+  ## Secret containing SIDB password mapped to secretKey
+  adminPassword:
+    secretName: freedb-admin-secret
+    secretKey: oracle_pwd
+    keepSecret: true    
+
+  ## Database image details
+  image:
+    ## Oracle Database Free is only supported from DB version 23.2 onwards
+    pullFrom: container-registry.oracle.com/database/free:latest
+    prebuiltDB: false
+
+  ## size is the required minimum size of the persistent volume
+  ## storageClass is specified for automatic volume provisioning
+  ## accessMode can only accept one of ReadWriteOnce, ReadWriteMany
+  persistence:
+    size: 5Gi
+    ## oci-bv applies to OCI block volumes. Use "standard" storageClass for dynamic provisioning in Minikube. Update as appropriate for other cloud service providers
+    storageClass: nfs-csi-storage
+    setWritePermissions: false
+    accessMode: "ReadWriteOnce"
+
+  ## If deploying on OpenShift, change service account name to 'sidb-sa' after you run `$ oc apply -f openshift_rbac.yaml`
+  serviceAccountName: 'sidb-sa'
+
+  ## Count of Database Pods. Should be 1 for free edition.
+  replicas: 1
+
+  ## enable the LoadBalancer service, by default service is the NodePort service available
+  loadBalancer: true

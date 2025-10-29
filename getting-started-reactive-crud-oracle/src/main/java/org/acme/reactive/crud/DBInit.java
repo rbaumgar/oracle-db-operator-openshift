@@ -16,21 +16,31 @@ import org.jboss.logging.Logger;
 public class DBInit {
 
     private final OraclePool client;
+
+    @ConfigProperty(name = "schema.create", defaultValue = "true")
     private boolean schemaCreate;
+    @ConfigProperty(name = "user") 
+    private String user;
+    @ConfigProperty(name = "password") 
+    private String password;
+    @ConfigProperty(name = "connection", defaultValue = "myhost:1521/mydb")
+    private String connection;
 
     private static final Logger LOGGER = Logger.getLogger("ListenerBean");
 
-    public DBInit(OraclePool client, 
-    @ConfigProperty(name = "schema.create", defaultValue = "true") boolean schemaCreate)
+    public DBInit(OraclePool client)
     
     {
         this.client = client;
-        this.schemaCreate = schemaCreate;
 
     }
 
     void onStart(@Observes StartupEvent ev) {
         LOGGER.info("The application is starting...");
+        LOGGER.info("user: " + user);
+        LOGGER.info("connection: " + connection);
+        LOGGER.info("schema.create: " + schemaCreate);
+        LOGGER.info("Class:" + client.getConnection().getClass());
 
         if (schemaCreate) {
             initdb();
@@ -40,21 +50,28 @@ public class DBInit {
     void onStop(@Observes ShutdownEvent ev) {               
         LOGGER.info("The application is stopping...");
         LOGGER.info("DROP TABLE fruits");
-        client.query("DROP TABLE fruits").execute();
+        client.query("DROP TABLE fruits").execute().await().indefinitely();
         LOGGER.info("DROP SEQUENCE fruits_seq");
-        client.query("DROP SEQUENCE fruits_seq").execute();
+        client.query("DROP SEQUENCE fruits_seq").execute().await().indefinitely();
     }
 
     private void initdb() {
-        LOGGER.info("CREATE SEQUENCE fruits_seq START WITH 1");
-        LOGGER.info("CREATE TABLE fruits");
+
+        try {
+            client.query("DROP TABLE fruits").execute().await().indefinitely();
+            client.query("DROP SEQUENCE fruits_seq").execute().await().indefinitely();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
+        LOGGER.info("CREATE SEQUENCE fruits_seq + CREATE TABLE fruits + data");
         client.query("CREATE SEQUENCE fruits_seq START WITH 1").execute()
-                .flatMap(r ->client.query("CREATE TABLE fruits (id NUMBER(10) DEFAULT fruits_seq.nextval NOT NULL, name VARCHAR2(30 BYTE) NOT NULL, PRIMARY KEY (id) )").execute())
-                .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Kiwi')").execute())
-                .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Durian')").execute())
-                .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Pomelo')").execute())
-                .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Lychee')").execute())
-                .await().indefinitely();
-                this.schemaCreate = false;
+            .flatMap(r -> client.query("CREATE TABLE fruits (id NUMBER(10) DEFAULT fruits_seq.nextval NOT NULL, name VARCHAR2(30 BYTE) NOT NULL, PRIMARY KEY (id) )").execute())
+            .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Kiwi')").execute())
+            .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Durian')").execute())
+            .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Pomelo')").execute())
+            .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Lychee')").execute())
+            .await().indefinitely();
+            this.schemaCreate = false;
     }
 }

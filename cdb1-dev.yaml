@@ -1,0 +1,64 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: cdb1-secret
+  # namespace: oracle
+data:
+  cdbadmin_pwd: T3BlblNoaWZ0LURlbW9fMjAyNAo=
+  cdbadmin_user: QyMjREJBUElfQ0RCX0FETUlOCg==
+  ords_pwd: T3BlblNoaWZ0LURlbW9fMjAyNA==
+  sysadmin_pwd: SGFkZXhfSXhvbmEtOTQ2Cg==
+  webserver_pwd: T3BlblNoaWZ0LURlbW9fMjAyNA==
+  webserver_user: b3Jkcw==
+type: Opaque
+---
+apiVersion: database.oracle.com/v1alpha1
+kind: CDB 
+metadata: 
+  name: cdb-dev
+  # namespace: oracle
+spec:
+  cdbName: "devcdb"
+  # dbServer: "130.162.233.115"
+  dbServer: "130.61.77.143"
+  dbPort: 1521
+  replicas: 1
+  cdbTlsKey:
+    secret:
+      key: tls.key
+      secretName: db-tls  
+  cdbTlsCrt:
+    secret:
+      key: tls.crt
+      secretName: db-tls
+  ordsImage: "quay.io/rbaumgar/ords:latest"
+  # ordsImage: container-registry.oracle.com/database/ords:latest
+  ordsImagePullPolicy: "Always"
+  # Uncomment Below Secret Format for accessing ords image from private docker registry
+  # ordsImagePullSecret: ""
+  # serviceName: "PROD_v5p_fra.ad1.vcn.oraclevcn.com"
+  serviceName: CLOUDDB_nch_fra.public.vcn2.oraclevcn.com
+  sysAdminPwd: 
+    secret: 
+      secretName: "cdb1-secret"
+      key: "sysadmin_pwd"
+  ordsPwd:
+    secret: 
+      secretName: "cdb1-secret"
+      key: "ords_pwd"  
+  cdbAdminUser: 
+    secret: 
+      secretName: "cdb1-secret"
+      key: "cdbadmin_user"
+  cdbAdminPwd: 
+    secret: 
+      secretName: "cdb1-secret"
+      key: "cdbadmin_pwd"
+  webServerUser: 
+    secret: 
+      secretName: "cdb1-secret"
+      key: "webserver_user"
+  webServerPwd: 
+    secret: 
+      secretName: "cdb1-secret"
+      key: "webserver_pwd"  

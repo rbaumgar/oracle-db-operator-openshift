@@ -1,0 +1,82 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oracle-crud-jvm
+  labels:
+    app: oracle-crud-jvm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oracle-crud-jvm
+  template:
+    metadata:
+      labels:
+        app: oracle-crud-jvm
+        deployment: oracle-crud-jvm
+    spec:
+      volumes:
+        - name: tnsnames
+          configMap:
+            name: tnsnames
+            defaultMode: 420
+      containers:
+        - name: oracle-crud-jvm
+          env:
+            - name: USER
+              value: system
+            - name: PASSWORD
+              value: changeme
+            - name: CONNECTION
+              value: atprba_tp?TNS_ADMIN=/tnsnames/
+            - name: SCHEMA_CREATE1
+              value: 'false'
+          resources: 
+            limits: {}
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: tnsnames
+              mountPath: /tnsnames
+          image: quay.io/rbaumgar/oracle-crud-jvm
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: oracle-crud-jvm
+  name: oracle-crud-jvm
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: 8443-tcp
+      protocol: TCP
+      port: 8443
+      targetPort: 8443
+  selector:
+    app: oracle-crud-jvm
+    deployment: oracle-crud-jvm
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: oracle-crud-jvm
+  labels:
+    app: oracle-crud-jvm
+spec:
+  to:
+    kind: Service
+    name: oracle-crud-jvm
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  tls:
+    termination: edge
+  wildcardPolicy: None
