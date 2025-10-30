@@ -23,7 +23,7 @@ spec:
       containers:
         - name: oracle-crud-jvm
           env:
-            - name: USER
+            - name: USERNAME
               value: system
             - name: PASSWORD
               value: changeme
@@ -80,3 +80,18 @@ spec:
   tls:
     termination: edge
   wildcardPolicy: None
+---
+apiVersion: v1
+data:
+  tnsnames.ora: "atprba_tp=(description= \n    (retry_count=20)\n    (retry_delay=3)\n
+    \   (address=\n        (protocol=tcps)\n        (port=1521)\n        (host=adb.eu-frankfurt-1.oraclecloud.com)\n
+    \   )\n    (connect_data=\n        (service_name=abcdefxyz1234_atprba_tp.adb.oraclecloud.com)\n
+    \   )\n    (security=\n        (ssl_server_dn_match=yes)\n    )\n)"
+kind: ConfigMap
+metadata:
+  name: tnsnames
+  labels:
+    app: oracle-crud-jvm  
+
+
+
