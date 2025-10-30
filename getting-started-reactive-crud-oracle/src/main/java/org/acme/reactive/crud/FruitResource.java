@@ -30,14 +30,15 @@ import jakarta.ws.rs.core.Response.Status;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
-import io.vertx.mutiny.oracleclient.OraclePool;
+//import io.vertx.mutiny.oracleclient.OraclePool;
+import io.vertx.mutiny.sqlclient.Pool;
 
 @Path("fruits")
 public class FruitResource {
 
-    private final OraclePool client;
+    private final Pool client;
 
-    public FruitResource(OraclePool client) {
+    public FruitResource(Pool client) {
         this.client = client;
     }
 

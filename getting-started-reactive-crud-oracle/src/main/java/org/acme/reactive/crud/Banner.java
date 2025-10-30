@@ -18,7 +18,8 @@ package org.acme.reactive.crud;
 
 import io.smallrye.mutiny.Multi;
 
-import io.vertx.mutiny.oracleclient.OraclePool;
+//import io.vertx.mutiny.oracleclient.OraclePool;
+import io.vertx.mutiny.sqlclient.Pool;
 import io.vertx.mutiny.sqlclient.Row;
 
 import org.jboss.logging.Logger;
@@ -37,7 +38,7 @@ public class Banner {
         this.text = name;
     }
 
-    public static Multi<Banner> findAll(OraclePool client) {
+    public static Multi<Banner> findAll(Pool client) {
         LOGGER.info("Find all Banners");
         return client.query("SELECT banner_full from v$version").execute()
                 .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))

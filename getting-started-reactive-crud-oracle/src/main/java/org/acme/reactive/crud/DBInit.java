@@ -6,7 +6,8 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-import io.vertx.mutiny.oracleclient.OraclePool;
+//import io.vertx.mutiny.oracleclient.OraclePool;
+import io.vertx.mutiny.sqlclient.Pool;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -15,7 +16,7 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class DBInit {
 
-    private final OraclePool client;
+    private final Pool client;
 
     @ConfigProperty(name = "schema.create", defaultValue = "true")
     private boolean schemaCreate;
@@ -28,7 +29,7 @@ public class DBInit {
 
     private static final Logger LOGGER = Logger.getLogger("ListenerBean");
 
-    public DBInit(OraclePool client)
+    public DBInit(Pool client)
     
     {
         this.client = client;

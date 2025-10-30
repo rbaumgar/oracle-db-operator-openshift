@@ -21,16 +21,17 @@ import jakarta.ws.rs.Path;
  
 import io.smallrye.mutiny.Multi;
 
-import io.vertx.mutiny.oracleclient.OraclePool;
+//import io.vertx.mutiny.oracleclient.OraclePool;
+import io.vertx.mutiny.sqlclient.Pool;
 
 @Path("params")
 public class DBParam {
 
     public String name;
 
-    private final OraclePool client;
+    private final Pool client;
 
-    public DBParam(OraclePool client) {
+    public DBParam(Pool client) {
         this.client = client;
     }
 
