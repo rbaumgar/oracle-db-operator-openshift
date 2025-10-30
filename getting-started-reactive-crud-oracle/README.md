@@ -85,39 +85,135 @@ Easily start your REST Web Services
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
 
 
+## Create a Namespace
+
+First, create a new project (namespace) in which to run everything:
+
+oc new-project oracle-db
+
+Next, you create a Service Account which you will use to run the database:
+
+oc create sa oracle-sa
+
+serviceaccount/oracle-sa created
+
+
+
+As Oracle runs with the user and group id 54321, you now need to add the anyuid Security Context Constraint (SCC) to the Service Account. This allows the database to run under its required user and group IDs:
+
+oc adm policy add-scc-to-user anyuid -z oracle-sa
+
+clusterrole.rbac.authorization.k8s.io/system:openshift:scc:anyuid added: "oracle-sa"
+
+
+To see the effect of this, you can run the following command to observe that the Service Account has permissions to use the anyuid SCC:
+
+oc adm policy who-can use scc anyuid | grep oracle-db
+
+Now you create a secret to store the default password for Oracle to use by replacing [your_password_here] in the command below with the password of your choice:
+
+oc create secret generic oracle-db-pass --from-literal=password=[your_password_here]
+
+secret/oracle-db-pass created
+
+Creating the DB
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: oracle-db-svc
+  labels:
+    app: oracle-db
+spec:
+  ports:
+    - port: 1521
+  selector:
+    app: oracle-db
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: oracle-db-pvc
+  labels:
+    app: oracle-db
+spec:
+  accessModes:
+    - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: oracle-db
+  labels:
+    app: oracle-db
+spec:
+  serviceName: oracle-db-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oracle-db
+  template:
+    metadata:
+      labels:
+        app: oracle-db
+    spec:
+      initContainers:
+      - name: init-oracle
+        image: registry.access.redhat.com/ubi9/ubi:latest
+        command: ['/usr/bin/bash', '-c']
+        args:
+          - echo starting permissions check on /opt/oracle/oradata/;
+            ls -al /opt/oracle/;
+            if [ -f "/opt/oracle/oradata/PERMS.SET" ]; then
+              echo permissions already set;
+            else
+              chown -R 54321:54321 /opt/oracle/oradata;
+              ls -al /opt/oracle/;
+              touch /opt/oracle/oradata/PERMS.SET;
+              echo permissions set;
+            fi;
+            echo finished;
+        securityContext:
+          runAsUser: 0 
+        volumeMounts:
+        - name: oracle-db-persistent-storage
+          mountPath: /opt/oracle/oradata
+      containers:
+      - name: oracle-db
+        image: gvenzl/oracle-free
+        env:
+        - name: ORACLE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oracle-db-pass
+              key: password
+        - name: APP_USER_PASSWORD
+          value: quarkus
+        - name: APP_USER
+          value: quarkus              
+        ports:
+        - containerPort: 1521
+          name: oracle-db
+        volumeMounts:
+        - name: oracle-db-persistent-storage
+          mountPath: /opt/oracle/oradata
+        securityContext:
+          runAsUser: 54321
+      serviceAccountName: oracle-sa
+      volumes:
+      - name: oracle-db-persistent-storage
+        persistentVolumeClaim:
+          claimName: oracle-db-pvc
+
+
+
 ## Create a Database Deployment/Pod
 
-```
-cat <<EOF | oc apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  creationTimestamp: "2025-10-29T09:51:07Z"
-  labels:
-    app: oracle-free
-  name: oracle-free
-spec:
-  containers:
-  - env:
-    - name: APP_USER_PASSWORD
-      value: quarkus
-    - name: ORACLE_DATABASE
-      value: quarkus
-    - name: APP_USER
-      value: rbaumgar
-    - name: ORACLE_PASSWORD
-      value: quarkus
-    image: docker.io/gvenzl/oracle-free:23-slim-faststart
-    name: oracle-free
-    ports:
-    - containerPort: 1521
-      hostPort: 44919
-    - containerPort: 8080
-      hostPort: 41531
-    resources:
-      limits:
-        cpu: "2"
-
+```shell
 cat <<EOF | oc apply -f -
 apiVersion: apps/v1
 kind: Deployment
@@ -139,24 +235,15 @@ spec:
         ports:
         - containerPort: 1521
         - containerPort: 8080
-      containers:
-      - env:
+        env:
           - name: APP_USER_PASSWORD
-          value: quarkus
+            value: quarkus
           - name: ORACLE_DATABASE
-          value: quarkus
+            value: quarkus
           - name: APP_USER
-          value: rbaumgar
+            value: rbaumgar
           - name: ORACLE_PASSWORD
-          value: quarkus
-          image: docker.io/gvenzl/oracle-free:23-slim-faststart
-          name: oracle-free
-          ports:
-          - containerPort: 1521
-          - containerPort: 8080
-          resources:
-          limits:
-              cpu: "2"        
+            value: quarkus
 ---
 apiVersion: v1
 kind: Service

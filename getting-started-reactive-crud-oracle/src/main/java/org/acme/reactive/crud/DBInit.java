@@ -19,7 +19,7 @@ public class DBInit {
 
     @ConfigProperty(name = "schema.create", defaultValue = "true")
     private boolean schemaCreate;
-    @ConfigProperty(name = "user") 
+    @ConfigProperty(name = "username") 
     private String user;
     @ConfigProperty(name = "password") 
     private String password;
