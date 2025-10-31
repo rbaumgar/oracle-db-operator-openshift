@@ -24,7 +24,7 @@ import io.smallrye.mutiny.Multi;
 //import io.vertx.mutiny.oracleclient.OraclePool;
 import io.vertx.mutiny.sqlclient.Pool;
 
-@Path("params")
+@Path("/db")
 public class DBParam {
 
     public String name;
@@ -36,11 +36,21 @@ public class DBParam {
     }
 
     @GET
+    @Path("params")
     public Multi<Banner> get() {
-        return Banner.findAll(client);        
-        
-
+        return Banner.findAllBanner(client);        
     }
 
+        @GET
+    @Path("tables")
+    public Multi<Banner> getTables() {
+        return Banner.findAllUsers(client);        
+    }
+
+    @GET
+    @Path("users")
+    public Multi<Banner> getUsers() {
+        return Banner.findAllUsers(client);        
+    }
 }
  

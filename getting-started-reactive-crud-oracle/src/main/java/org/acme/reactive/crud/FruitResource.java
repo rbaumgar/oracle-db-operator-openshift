@@ -77,4 +77,5 @@ public class FruitResource {
                 .onItem().transform(deleted -> deleted ? Status.NO_CONTENT : Status.NOT_FOUND)
                 .onItem().transform(status -> Response.status(status).build());
     }
+
 }

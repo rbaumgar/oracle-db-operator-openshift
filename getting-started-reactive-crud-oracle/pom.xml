@@ -6,7 +6,7 @@
 
     <groupId>io.quarkus.quickstarts</groupId>
     <artifactId>getting-started-reactive-rest</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 
     <properties>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>

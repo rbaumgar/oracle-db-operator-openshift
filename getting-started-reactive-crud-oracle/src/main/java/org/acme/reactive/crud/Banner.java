@@ -26,7 +26,7 @@ import org.jboss.logging.Logger;
 
 public class Banner {
 
-    public String text;
+    public String value;
 
     private static final Logger LOGGER = Logger.getLogger("ListenerBean");
 
@@ -35,10 +35,10 @@ public class Banner {
     }
 
     public Banner(String name) {
-        this.text = name;
+        this.value = name;
     }
 
-    public static Multi<Banner> findAll(Pool client) {
+    public static Multi<Banner> findAllBanner(Pool client) {
         LOGGER.info("Find all Banners");
         return client.query("SELECT banner_full from v$version").execute()
                 .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
@@ -47,5 +47,27 @@ public class Banner {
 
     private static Banner from(Row row) {
         return new Banner(row.getString("banner_full"));
+    }
+
+    public static Multi<Banner> findAllTables(Pool client) {
+        LOGGER.info("Find all Banners");
+        return client.query("SELECT TABLE_NAME from ALL_TABLES").execute()
+                .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
+                .onItem().transform(Banner::fromTable);
+    }
+
+    private static Banner fromTable(Row row) {
+        return new Banner(row.getString("table_name"));
+    }
+
+    public static Multi<Banner> findAllUsers(Pool client) {
+        LOGGER.info("Find all Banners");
+        return client.query("SELECT USERNAME from ALL_USERS").execute()
+                .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
+                .onItem().transform(Banner::fromUsers);
+    }
+
+    private static Banner fromUsers(Row row) {
+        return new Banner(row.getString("username"));
     }
 }

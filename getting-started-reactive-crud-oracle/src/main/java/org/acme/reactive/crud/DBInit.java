@@ -1,17 +1,17 @@
 package org.acme.reactive.crud;
 
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
 
 //import io.vertx.mutiny.oracleclient.OraclePool;
 import io.vertx.mutiny.sqlclient.Pool;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class DBInit {
@@ -27,21 +27,18 @@ public class DBInit {
     @ConfigProperty(name = "connection", defaultValue = "myhost:1521/mydb")
     private String connection;
 
-    private static final Logger LOGGER = Logger.getLogger("ListenerBean");
-
     public DBInit(Pool client)
     
     {
         this.client = client;
-
     }
 
     void onStart(@Observes StartupEvent ev) {
-        LOGGER.info("The application is starting...");
-        LOGGER.info("user: " + user);
-        LOGGER.info("connection: " + connection);
-        LOGGER.info("schema.create: " + schemaCreate);
-        LOGGER.info("Class:" + client.getConnection().getClass());
+        Log.info("The application is starting...");
+        Log.info("user: " + user);
+        Log.info("connection: " + connection);
+        Log.info("schema.create: " + schemaCreate);
+        Log.info("Class:" + client.getConnection().getClass());
 
         if (schemaCreate) {
             initdb();
@@ -49,10 +46,10 @@ public class DBInit {
     }
 
     void onStop(@Observes ShutdownEvent ev) {               
-        LOGGER.info("The application is stopping...");
-        LOGGER.info("DROP TABLE fruits");
+        Log.info("The application is stopping...");
+        Log.info("DROP TABLE fruits");
         client.query("DROP TABLE fruits").execute().await().indefinitely();
-        LOGGER.info("DROP SEQUENCE fruits_seq");
+        Log.info("DROP SEQUENCE fruits_seq");
         client.query("DROP SEQUENCE fruits_seq").execute().await().indefinitely();
     }
 
@@ -65,7 +62,7 @@ public class DBInit {
             // TODO: handle exception
         }
         
-        LOGGER.info("CREATE SEQUENCE fruits_seq + CREATE TABLE fruits + data");
+        Log.info("CREATE SEQUENCE fruits_seq + CREATE TABLE fruits + data");
         client.query("CREATE SEQUENCE fruits_seq START WITH 1").execute()
             .flatMap(r -> client.query("CREATE TABLE fruits (id NUMBER(10) DEFAULT fruits_seq.nextval NOT NULL, name VARCHAR2(30 BYTE) NOT NULL, PRIMARY KEY (id) )").execute())
             .flatMap(r -> client.query("INSERT INTO fruits (name) VALUES ('Kiwi')").execute())
@@ -75,4 +72,5 @@ public class DBInit {
             .await().indefinitely();
             this.schemaCreate = false;
     }
+
 }

@@ -16,6 +16,8 @@
 
 package org.acme.reactive.crud;
 
+import io.quarkus.logging.Log;
+
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
@@ -25,15 +27,11 @@ import io.vertx.mutiny.sqlclient.Row;
 import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 
-import org.jboss.logging.Logger;
-
 public class Fruit {
 
     public Long id;
 
     public String name;
-
-    private static final Logger LOGGER = Logger.getLogger("ListenerBean");
 
     public Fruit() {
         // default constructor.
@@ -49,34 +47,34 @@ public class Fruit {
     }
 
     public static Multi<Fruit> findAll(Pool client) {
-        LOGGER.info("Find all Fruits");
+        Log.info("Find all Fruits");
         return client.query("SELECT id, name FROM fruits ORDER BY name ASC").execute()
                 .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
                 .onItem().transform(Fruit::from);
     }
 
     public static Uni<Fruit> findById(Pool client, Long id) {
-        LOGGER.info("Find Fruit id: " + id);
+        Log.info("Find Fruit id: " + id);
         return client.preparedQuery("SELECT id, name FROM fruits WHERE id = ?").execute(Tuple.of(id))
                 .onItem().transform(RowSet::iterator)
                 .onItem().transform(iterator -> iterator.hasNext() ? from(iterator.next()) : null);
     }
 
     public Uni<Long> save(Pool client) {
-        LOGGER.info("Create Fruit: " + name);
+        Log.info("Create Fruit: " + name);
         return client.preparedQuery("INSERT INTO fruits (id, name) VALUES (fruits_seq.nextval, ?)").execute(Tuple.of(name)) 
                 .onItem().transform(RowSet::iterator)
                 .onItem().transform(iterator -> iterator.hasNext() ? from(iterator.next()).id : null);     
     }
 
     public Uni<Boolean> update(Pool client, Long id) {
-        LOGGER.info("Update id: " + id);
+        Log.info("Update id: " + id);
         return client.preparedQuery("UPDATE fruits SET name = ? WHERE id = ?").execute(Tuple.of(name, id))
                 .onItem().transform(oracleRowSet -> oracleRowSet.rowCount() == 1);
     }
 
     public static Uni<Boolean> delete(Pool client, Long id) {
-        LOGGER.info("Delete id: " + id);
+        Log.info("Delete id: " + id);
         return client.preparedQuery("DELETE FROM fruits WHERE id = ?").execute(Tuple.of(id))
                 .onItem().transform(oracleRowSet -> oracleRowSet.rowCount() == 1);
     }
